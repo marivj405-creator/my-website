@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maari — Daily Steps & Running Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B0C0E; --bg2:#131519; --card:#16181D; --line:#242730;
+  --ink:#F2F1ED; --ink-dim:#9BA0AA; --accent:#8FBF9F; --amber:#E8A33D;
+  --radius:18px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+:root[data-theme="light"]{
+  --bg:#F5F4F0; --bg2:#EDEBE5; --card:#FFFFFF; --line:#E1DED6;
+  --ink:#15171A; --ink-dim:#63676F; --accent:#3F7A55; --amber:#B5761F;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth; scroll-padding-top:env(safe-area-inset-top,0px);}
+html,body{height:100%;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+h1,h2,h3,.display{font-family:'Space Grotesk',system-ui,sans-serif;}
+.wrap{max-width:960px;margin:0 auto;padding:0 24px;}
+a{color:inherit;}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:50;padding:16px 0;background:color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line);top:env(safe-area-inset-top,0px);}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Cormorant Garamond', serif; font-weight:700; letter-spacing:.04em; font-size:1.7rem; line-height:1; color:var(--ink);}
+.navlinks{display:flex;gap:28px;font-size:.92rem;color:var(--ink-dim);}
+.navlinks a{text-decoration:none;transition:color .2s;}
+.navlinks a:hover{color:var(--ink);}
+.toggle{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;
+  padding:8px 14px;font-size:.85rem;cursor:pointer;transition:.2s;}
+.toggle:hover{border-color:var(--accent);}
+.mobile-nav{display:none;}
+@media(max-width:680px){.navlinks{display:none;}}
+
+/* HERO */
+.hero{min-height:88vh;display:flex;flex-direction:column;justify-content:center;position:relative;
+  border-bottom:1px solid var(--line);
+  background:
+    radial-gradient(600px 300px at 15% 20%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 70%),
+    radial-gradient(500px 260px at 85% 75%, color-mix(in srgb, var(--amber) 14%, transparent), transparent 70%);
+}
+.eyebrow{color:var(--accent);font-size:1.15rem;font-weight:600;margin-bottom:14px; font-family:'Cormorant Garamond', serif; letter-spacing:.08em; text-transform:uppercase;}
+.hero h1{font-size:clamp(2.6rem,7vw,5.2rem);line-height:1.02;margin:0 0 20px;font-weight:700;letter-spacing:-.01em;max-width:14ch;}
+.hero p{font-size:clamp(1.05rem,2vw,1.3rem);color:var(--ink-dim);max-width:38ch;margin:0 0 34px;}
+.btn-row{display:flex;gap:14px;flex-wrap:wrap;}
+.btn{border:none;border-radius:999px;padding:14px 26px;font-size:.98rem;font-weight:600;cursor:pointer;
+  transition:transform .15s, box-shadow .15s;font-family:inherit;}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--ink);color:var(--bg);}
+.btn-primary:hover{box-shadow:0 6px 24px color-mix(in srgb, var(--ink) 30%, transparent);}
+.btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line);}
+.btn-ghost:hover{border-color:var(--accent);}
+
+section{padding:100px 0;border-bottom:1px solid var(--line);}
+.kicker{color:var(--accent);font-weight:600;font-size:.85rem;margin-bottom:10px;}
+h2{font-size:clamp(1.8rem,4vw,2.6rem);margin:0 0 8px;font-weight:600;}
+.sub{color:var(--ink-dim);max-width:52ch;margin:0 0 44px;font-size:1.02rem;}
+
+/* CARDS / GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:28px;}
+@media(max-width:760px){.grid2{grid-template-columns:1fr;}}
+
+label{display:block;font-size:.88rem;color:var(--ink-dim);margin:16px 0 6px;}
+label:first-child{margin-top:0;}
+input, select, textarea{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:12px;color:var(--ink);
+  padding:13px 14px;font-size:1rem;font-family:inherit;transition:border-color .2s;}
+input:focus, select:focus, textarea:focus{outline:none;border-color:var(--accent);}
+textarea{min-height:86px;resize:vertical;}
+.err{color:#E8654F;font-size:.82rem;min-height:1.2em;margin-top:4px;}
+.savebtn{margin-top:22px;width:100%;}
+
+/* GOAL RING */
+.goalcard{display:flex;align-items:center;gap:28px;flex-wrap:wrap;}
+.ring{width:170px;height:170px;flex:none;}
+.goaltext{flex:1;min-width:180px;}
+.goalnum{font-size:1.9rem;font-weight:700;}
+.goalpct{color:var(--accent);font-weight:600;}
+.goalmsg{margin-top:10px;color:var(--ink-dim);}
+.goalgoal{display:flex;align-items:center;gap:8px;margin-top:16px;}
+.goalgoal input{width:110px;}
+
+.settings-card{display:flex;flex-direction:column;gap:14px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;}
+.toggle-row h3{margin:0 0 6px;font-size:1.1rem;}
+.toggle-row p{margin:0;color:var(--ink-dim);font-size:.95rem;line-height:1.5;max-width:50ch;}
+.settings-meta{color:var(--ink-dim);font-size:.9rem;line-height:1.5;}
+.track-toggle{border:1px solid var(--line);background:var(--bg2);color:var(--ink);border-radius:999px;padding:10px 18px;font-size:.85rem;font-weight:600;cursor:pointer;transition:.2s;}
+.track-toggle.enabled{background:var(--accent);color:#0B0C0E;border-color:var(--accent);}
+.track-toggle:hover{border-color:var(--accent);}
+
+/* STATS */
+.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+@media(max-width:760px){.statgrid{grid-template-columns:repeat(2,1fr);}}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px 20px;}
+.stat .num{font-size:clamp(1.6rem,3vw,2.2rem);font-weight:700;display:block;}
+.stat .lbl{color:var(--ink-dim);font-size:.85rem;margin-top:4px;}
+
+/* FEATURE BLOCKS */
+.feat3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+@media(max-width:760px){.feat3{grid-template-columns:1fr;}}
+.feat3 .card h3{margin:0 0 8px;font-size:1.15rem;}
+.feat3 .card p{color:var(--ink-dim);margin:0;font-size:.94rem;}
+
+/* HISTORY */
+.hist-item{display:flex;align-items:center;justify-content:space-between;background:var(--card);
+  border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:10px;gap:12px;flex-wrap:wrap;}
+.hist-date{font-weight:600;min-width:80px;}
+.hist-mid{display:flex;gap:22px;color:var(--ink-dim);font-size:.9rem;flex-wrap:wrap;}
+.hist-mid b{color:var(--ink);}
+.delbtn{background:none;border:1px solid var(--line);color:var(--ink-dim);border-radius:8px;
+  padding:6px 12px;font-size:.82rem;cursor:pointer;}
+.delbtn:hover{border-color:#E8654F;color:#E8654F;}
+
+/* WEEK CHART */
+.chartwrap{display:flex;align-items:flex-end;gap:14px;height:200px;padding-top:20px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;gap:8px;}
+.bar{width:100%;max-width:36px;background:var(--accent);border-radius:8px 8px 4px 4px;
+  transition:height 1s cubic-bezier(.2,.8,.2,1);}
+.bar-lbl{font-size:.78rem;color:var(--ink-dim);}
+
+/* RECORDS */
+.recgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+@media(max-width:760px){.recgrid{grid-template-columns:1fr 1fr;}}
+.rec .num{font-size:1.5rem;font-weight:700;}
+.rec .lbl{color:var(--ink-dim);font-size:.82rem;margin-top:2px;}
+
+.empty{text-align:center;padding:60px 20px;}
+.empty p{color:var(--ink-dim);max-width:38ch;margin:8px auto 26px;}
+
+footer{padding:60px 0 calc(60px + env(safe-area-inset-bottom,0px));}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+footer .navlinks{gap:20px;}
+.foot-tag{color:var(--ink-dim);font-size:.9rem;}
+
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease, transform .7s ease;}
+.reveal.in{opacity:1;transform:none;}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none;}.bar{transition:none;}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="logo">Maari</div>
+    <div class="navlinks">
+      <a href="#home">Home</a><a href="#today">Today</a><a href="#progress">Progress</a><a href="#history">History</a>
+    </div>
+    <button class="toggle" id="themeBtn">Dark</button>
+  </div>
+</nav>
+
+<section class="hero" id="home">
+  <div class="wrap">
+    <div class="eyebrow">Maari</div>
+    <h1>Move every day.</h1>
+    <p>Track every step. Every run. Every goal.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="document.getElementById('today').scrollIntoView()">Start Tracking</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('progress').scrollIntoView()">View Progress</button>
+    </div>
+  </div>
+</section>
+
+<section id="today">
+  <div class="wrap">
+    <div class="kicker reveal">Today's Activity</div>
+    <h2 class="reveal">Log what you did today</h2>
+    <p class="sub reveal">Steps, runs and time — takes ten seconds to record.</p>
+    <div class="grid2">
+      <div class="card reveal">
+        <label for="f-date">Date</label>
+        <input type="date" id="f-date">
+        <label for="f-steps">Steps walked today</label>
+        <input type="number" id="f-steps" placeholder="8500" min="0">
+        <label for="f-dist">Distance covered (km)</label>
+        <input type="number" id="f-dist" placeholder="5.2" min="0" step="0.1">
+        <label for="f-dur">Workout duration (minutes)</label>
+        <input type="number" id="f-dur" placeholder="42" min="0">
+        <label for="f-active">Active minutes</label>
+        <input type="number" id="f-active" placeholder="35" min="0">
+        <label for="f-activity">Daily activity</label>
+        <select id="f-activity">
+          <option value="Walk">Walk</option>
+          <option value="Run">Run</option>
+          <option value="Workout">Workout</option>
+          <option value="Workout + Walk">Workout + Walk</option>
+          <option value="Recovery">Recovery</option>
+          <option value="Custom">Custom</option>
+        </select>
+        <label for="f-notes">Daily notes</label>
+        <textarea id="f-notes" placeholder="Felt strong today, walked 20 minutes after lunch..."></textarea>
+        <div class="err" id="f-err"></div>
+        <button class="btn btn-primary savebtn" id="saveBtn">Save Activity</button>
+      </div>
+
+      <div class="card goalcard reveal">
+        <svg class="ring" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="var(--line)" stroke-width="10"/>
+          <circle id="ringFg" cx="50" cy="50" r="42" fill="none" stroke="var(--accent)" stroke-width="10"
+            stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264" transform="rotate(-90 50 50)"
+            style="transition:stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1)"/>
+          <text x="50" y="46" text-anchor="middle" font-size="16" font-weight="700" fill="var(--ink)" id="ringPct">0%</text>
+          <text x="50" y="62" text-anchor="middle" font-size="7" fill="var(--ink-dim)">of goal</text>
+        </svg>
+        <div class="goaltext">
+          <div class="goalnum" id="goalNums">0 / 10,000 steps</div>
+          <div class="goalmsg" id="goalMsg">Add today's activity to begin.</div>
+          <div class="goalgoal">
+            <label style="margin:0;" for="f-goal">Daily step goal</label>
+            <input type="number" id="f-goal" value="10000" min="1000" step="500">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="progress">
+  <div class="wrap">
+    <div class="kicker reveal">Today's Summary</div>
+    <h2 class="reveal" id="sumHeading">No activity recorded yet.</h2>
+    <p class="sub reveal" id="sumSub">Start your first walk or run and your progress will appear here.</p>
+    <div class="statgrid reveal">
+      <div class="stat"><span class="num" id="s-steps">0</span><span class="lbl">Steps</span></div>
+      <div class="stat"><span class="num" id="s-dist">0 km</span><span class="lbl">Distance</span></div>
+      <div class="stat"><span class="num" id="s-run">0 min</span><span class="lbl">Active</span></div>
+      <div class="stat"><span class="num" id="s-cal">Daily</span><span class="lbl">Activity</span></div>
+    </div>
+    <div class="card reveal" style="margin-top:20px;">
+      <div class="kicker" style="margin-bottom:8px;">Notes</div>
+      <div id="dailyNotes" style="color:var(--ink-dim); line-height:1.6;">No notes added yet.</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="kicker reveal">Run. Track. Improve.</div>
+    <h2 class="reveal">Built around a daily habit</h2>
+    <p class="sub reveal">Three things matter: showing up, tracking honestly, and watching the trend.</p>
+    <div class="feat3 reveal">
+      <div class="card"><h3>Run</h3><p>Track running distance and duration for every session.</p></div>
+      <div class="card"><h3>Walk</h3><p>Track daily walking steps against your goal.</p></div>
+      <div class="card"><h3>Progress</h3><p>Understand how your activity changes week to week.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="settings">
+  <div class="wrap">
+    <div class="kicker reveal">Settings</div>
+    <h2 class="reveal">Motion tracking</h2>
+    <div class="card settings-card reveal">
+      <div class="toggle-row">
+        <div>
+          <h3>Enable step counting with motion sensors</h3>
+          <p>Turn on phone motion access so your steps are counted automatically while you walk.</p>
+        </div>
+        <button id="trackingToggle" class="track-toggle" type="button" aria-pressed="false">Off</button>
+      </div>
+      <div id="trackingStatus" class="settings-meta">Tracking is off. Enable it to count steps while walking.</div>
+      <div class="card rec" style="padding:20px 18px; margin-top:4px;">
+        <span class="num" id="liveStepCount">0</span>
+        <span class="lbl">Steps today</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="kicker reveal">This Week</div>
+    <h2 class="reveal">Steps, last 7 days</h2>
+    <div class="card reveal">
+      <div class="chartwrap" id="weekChart"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="kicker reveal">Personal Records</div>
+    <h2 class="reveal">Your bests so far</h2>
+    <div class="recgrid reveal">
+      <div class="card rec"><span class="num" id="r-steps">—</span><span class="lbl">Highest steps in a day</span></div>
+      <div class="card rec"><span class="num" id="r-run">—</span><span class="lbl">Longest run (min)</span></div>
+      <div class="card rec"><span class="num" id="r-dist">—</span><span class="lbl">Furthest run (km)</span></div>
+      <div class="card rec"><span class="num" id="r-tsteps">—</span><span class="lbl">Total steps recorded</span></div>
+      <div class="card rec"><span class="num" id="r-tdist">—</span><span class="lbl">Total distance (km)</span></div>
+      <div class="card rec"><span class="num" id="r-days">—</span><span class="lbl">Active days</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="history">
+  <div class="wrap">
+    <div class="kicker reveal">Activity History</div>
+    <h2 class="reveal">Every day you've logged</h2>
+    <div id="histList" class="reveal"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <div class="logo">Maari</div>
+      <div class="foot-tag">Every step counts.</div>
+    </div>
+    <div class="navlinks">
+      <a href="#home">Home</a><a href="#today">Today</a><a href="#progress">Progress</a><a href="#history">History</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+const KEY='marivj-activity', GOALKEY='marivj-goal', THEMEKEY='marivj-theme', TRACKINGKEY='maari-step-tracking', LIVEKEY='maari-live-steps';
+const $=s=>document.querySelector(s);
+const todayStr=()=>new Date().toISOString().slice(0,10);
+let motionTrackingEnabled = false;
+let liveStepCount = 0;
+let lastMotionMagnitude = 0;
+let lastStepTimestamp = 0;
+
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||[];}catch(e){return [];} }
+function save(list){localStorage.setItem(KEY,JSON.stringify(list));}
+function getGoal(){return parseInt(localStorage.getItem(GOALKEY))||10000;}
+function setGoal(g){localStorage.setItem(GOALKEY,g);}
+function getTrackingEnabled(){ return localStorage.getItem(TRACKINGKEY) === 'enabled'; }
+function setTrackingEnabled(v){ localStorage.setItem(TRACKINGKEY, v ? 'enabled' : 'disabled'); }
+function getLiveStepsForDate(date){
+  try {
+    const data = JSON.parse(localStorage.getItem(LIVEKEY) || '{}');
+    return Number(data[date] || 0);
+  } catch (e) { return 0; }
+}
+function setLiveStepsForDate(date, count){
+  try {
+    const data = JSON.parse(localStorage.getItem(LIVEKEY) || '{}');
+    data[date] = Number(count) || 0;
+    localStorage.setItem(LIVEKEY, JSON.stringify(data));
+  } catch (e) {}
+}
+
+$('#f-date').value=todayStr();
+$('#f-goal').value=getGoal();
+$('#f-activity').value='Walk';
+
+// Theme
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t==='light'?'light':'dark');
+  $('#themeBtn').textContent = t==='light' ? 'Light' : 'Dark';
+}
+applyTheme(localStorage.getItem(THEMEKEY)||'dark');
+$('#themeBtn').addEventListener('click',()=>{
+  const cur=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';
+  const next=cur==='light'?'dark':'light';
+  localStorage.setItem(THEMEKEY,next); applyTheme(next);
+});
+
+$('#f-goal').addEventListener('change',()=>{
+  const g=Math.max(1000,parseInt($('#f-goal').value)||10000);
+  setGoal(g); render();
+});
+
+function updateTrackingUi(){
+  const enabled = getTrackingEnabled();
+  const button = $('#trackingToggle');
+  const status = $('#trackingStatus');
+  button.textContent = enabled ? 'Enabled' : 'Off';
+  button.classList.toggle('enabled', enabled);
+  button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+
+  if (enabled) {
+    const supportsMotion = 'DeviceMotionEvent' in window;
+    status.textContent = supportsMotion
+      ? 'Motion sensors are enabled. Your phone is now counting steps while you walk.'
+      : 'Motion sensors are not available on this device, so step counting is unavailable here.';
+  } else {
+    status.textContent = 'Tracking is off. Enable it to count steps while walking.';
+  }
+}
+
+async function enableMotionTracking(){
+  if (!('DeviceMotionEvent' in window)) {
+    $('#trackingStatus').textContent = 'This device does not support motion sensors for step counting.';
+    return;
+  }
+
+  try {
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+      const permission = await DeviceMotionEvent.requestPermission();
+      if (permission !== 'granted') {
+        $('#trackingStatus').textContent = 'Motion permission was not granted, so step tracking is off.';
+        setTrackingEnabled(false);
+        updateTrackingUi();
+        return;
+      }
+    }
+
+    setTrackingEnabled(true);
+    motionTrackingEnabled = true;
+    const date = $('#f-date').value || todayStr();
+    liveStepCount = getLiveStepsForDate(date);
+    window.addEventListener('devicemotion', handleMotion, { passive: true });
+    updateTrackingUi();
+    render();
+  } catch (error) {
+    $('#trackingStatus').textContent = 'Unable to enable motion tracking on this device.';
+    setTrackingEnabled(false);
+    updateTrackingUi();
+  }
+}
+
+function disableMotionTracking(){
+  motionTrackingEnabled = false;
+  setTrackingEnabled(false);
+  window.removeEventListener('devicemotion', handleMotion);
+  updateTrackingUi();
+  render();
+}
+
+function handleMotion(event){
+  if (!getTrackingEnabled()) return;
+  const acceleration = event.accelerationIncludingGravity || event.acceleration;
+  if (!acceleration) return;
+
+  const magnitude = Math.sqrt((acceleration.x || 0) ** 2 + (acceleration.y || 0) ** 2 + (acceleration.z || 0) ** 2);
+  const delta = magnitude - lastMotionMagnitude;
+  const now = Date.now();
+
+  if (delta > 15 && now - lastStepTimestamp > 300) {
+    lastStepTimestamp = now;
+    const date = $('#f-date').value || todayStr();
+    liveStepCount += 1;
+    setLiveStepsForDate(date, liveStepCount);
+    render();
+  }
+
+  lastMotionMagnitude = magnitude;
+}
+
+$('#trackingToggle').addEventListener('click', async () => {
+  if (getTrackingEnabled()) {
+    disableMotionTracking();
+  } else {
+    await enableMotionTracking();
+  }
+});
+
+$('#saveBtn').addEventListener('click',()=>{
+  const date=$('#f-date').value||todayStr();
+  const steps=parseInt($('#f-steps').value)||0;
+  const dist=parseFloat($('#f-dist').value)||0;
+  const dur=parseInt($('#f-dur').value)||0;
+  const activeMinutes=parseInt($('#f-active').value)||0;
+  const activity=$('#f-activity').value || 'Daily';
+  const notes=($('#f-notes').value || '').trim();
+  if(steps<0||dist<0||dur<0||activeMinutes<0){ $('#f-err').textContent='Numbers can\'t be negative.'; return; }
+  if(steps===0 && dist===0 && dur===0 && activeMinutes===0){ $('#f-err').textContent='Add at least one value before saving.'; return; }
+  $('#f-err').textContent='';
+  let list=load();
+  list=list.filter(r=>r.date!==date);
+  list.push({date,steps,dist,dur,activeMinutes,activity,notes});
+  list.sort((a,b)=>b.date.localeCompare(a.date));
+  save(list);
+  $('#f-steps').value=''; $('#f-dist').value=''; $('#f-dur').value=''; $('#f-active').value=''; $('#f-activity').value='Walk'; $('#f-notes').value='';
+  render();
+});
+
+function fmt(n){return n.toLocaleString();}
+
+function render(){
+  const list=load();
+  const goal=getGoal();
+  const date=$('#f-date').value||todayStr();
+  const todayRec=list.find(r=>r.date===date) || {steps:0,dist:0,dur:0,activeMinutes:0,activity:'Daily',notes:''};
+  const motionSteps = getLiveStepsForDate(date);
+  const totalSteps = Math.max(Number(todayRec.steps || 0), motionSteps);
+
+  // Goal ring
+  const pct=Math.min(100, Math.round((totalSteps/goal)*100));
+  const circumference=264;
+  $('#ringFg').style.strokeDashoffset = circumference - (circumference*pct/100);
+  $('#ringPct').textContent=pct+'%';
+  $('#goalNums').textContent=`${fmt(totalSteps)} / ${fmt(goal)} steps`;
+  $('#goalMsg').textContent = totalSteps===0 ? "Add today's activity to begin."
+    : pct>=100 ? 'Goal completed. Keep moving.' : "You're getting there. Keep going.";
+
+  // Summary
+  const hasAny=list.length>0;
+  $('#sumHeading').textContent = hasAny ? "Today's numbers" : "No activity recorded yet.";
+  $('#sumSub').textContent = hasAny ? `${date}` : "Start your first walk or run and your progress will appear here.";
+  $('#s-steps').textContent=fmt(totalSteps);
+  $('#s-dist').textContent=todayRec.dist.toFixed(1)+' km';
+  $('#s-run').textContent=(todayRec.activeMinutes || 0)+' min';
+  $('#s-cal').textContent=todayRec.activity || 'Daily';
+  $('#dailyNotes').textContent = todayRec.notes ? todayRec.notes : 'No notes added yet.';
+  $('#liveStepCount').textContent = fmt(motionSteps);
+
+  // History
+  const histEl=$('#histList');
+  if(list.length===0){
+    histEl.innerHTML=`<div class="empty"><h3>No activity recorded yet.</h3>
+      <p>Start your first walk or run and your progress will appear here.</p>
+      <button class="btn btn-primary" onclick="document.getElementById('today').scrollIntoView()">Add Today's Activity</button></div>`;
+  } else {
+    histEl.innerHTML=list.map(r=>{
+      const p=Math.min(100,Math.round((r.steps/goal)*100));
+      const activityText = r.activity || 'Daily';
+      const notesText = r.notes ? ` · ${r.notes}` : '';
+      return `<div class="hist-item">
+        <div class="hist-date">${r.date}</div>
+        <div class="hist-mid"><span><b>${fmt(r.steps)}</b> steps</span><span><b>${r.dist.toFixed(1)}</b> km</span>
+        <span><b>${r.dur}</b> min</span><span><b>${r.activeMinutes || 0}</b> active</span><span><b>${activityText}</b>${notesText}</span></div>
+        <button class="delbtn" data-date="${r.date}">Delete</button></div>`;
+    }).join('');
+    histEl.querySelectorAll('.delbtn').forEach(b=>b.addEventListener('click',()=>{
+      save(load().filter(r=>r.date!==b.dataset.date)); render();
+    }));
+  }
+
+  // Week chart (last 7 days ending today, by calendar date)
+  const days=[]; const now=new Date();
+  for(let i=6;i>=0;i--){ const d=new Date(now); d.setDate(now.getDate()-i); days.push(d.toISOString().slice(0,10)); }
+  const maxSteps=Math.max(goal, ...list.map(r=>r.steps), 1);
+  $('#weekChart').innerHTML=days.map(d=>{
+    const rec=list.find(r=>r.date===d);
+    const s=rec?rec.steps:0;
+    const h=Math.max(4, Math.round((s/maxSteps)*160));
+    const lbl=new Date(d+'T00:00').toLocaleDateString(undefined,{weekday:'short'});
+    return `<div class="bar-col"><div class="bar" style="height:${h}px"></div><div class="bar-lbl">${lbl}</div></div>`;
+  }).join('');
+
+  // Records
+  if(list.length){
+    $('#r-steps').textContent=fmt(Math.max(...list.map(r=>r.steps)));
+    $('#r-run').textContent=Math.max(...list.map(r=>r.dur));
+    $('#r-dist').textContent=Math.max(...list.map(r=>r.dist)).toFixed(1);
+    $('#r-tsteps').textContent=fmt(list.reduce((a,r)=>a+r.steps,0));
+    $('#r-tdist').textContent=list.reduce((a,r)=>a+r.dist,0).toFixed(1);
+    $('#r-days').textContent=list.length;
+  }
+}
+
+$('#f-date').addEventListener('change', () => {
+  const date = $('#f-date').value || todayStr();
+  liveStepCount = getLiveStepsForDate(date);
+  render();
+});
+updateTrackingUi();
+render();
+
+// Scroll reveal
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+},{threshold:0.15});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
